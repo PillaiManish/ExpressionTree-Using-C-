@@ -1,0 +1,862 @@
+#include<stdio.h>
+#include<conio.h>
+#include<string.h>
+#include<malloc.h>
+#include<dos.h>
+#include<graphics.h>
+#define MAX 100
+#define SIZE 100
+
+// global variable //
+
+
+//for infix to postfix conersion
+char infix_exp[100], postfix_exp[100];
+char stacker[SIZE];
+int toper = -1;
+//
+
+
+//Declaring a struct node
+struct node
+{
+ struct node *right,*left,*prev;
+ char data;
+}*cur,*par,*root=NULL; //decarling these parameters as of node datatype
+
+
+//Declaring a struct stack //Conversion
+typedef struct stack
+	{
+	float data[MAX];
+	int top;
+	}stack;
+
+
+
+
+//declaring an float type array to use it as of stack form
+float st[MAX];
+int choice;
+
+
+//Declaring functions
+
+
+//design
+void head();
+void info();
+void credits();
+void postconvert();
+void infixconvert();
+void main();
+
+void conversion();
+void preorder(struct node *);
+void postorder(struct node *);
+void inorder(struct node *);
+void push(stack *s,float val);
+float pop(stack *s);
+void evaluatePostfixExp();
+
+
+void exiter()
+{
+	head();
+	printf("\n \n \n \n \n \t \t \t Press any key to exit");
+	delay(500);
+
+
+}
+
+void error()
+{
+	textcolor(WHITE+BLINK);
+	cprintf("\n \n \t \t \t \t \t \t \t \t \t \t \t \t \t \t \t \t \t \t ERROR \t \t \t \t \t \t \t \t \t \t \t \t \t \t \t \t \t ");
+	delay(1000);
+
+	textcolor(WHITE);
+	head();
+	cprintf("\n \n \n \n \n \n \n \t \t \t \t You will be directed to start \t \t \t \t");
+	delay(2000);
+	main();
+
+}
+
+void selecter()
+{
+head();
+printf("\n \t \t \t Select any one option: \n \t \t \t ");
+printf("\n\n \t \t\ \t 1. Main Menu \n\n \t \t \t 2. Exit \n\n \t \t \t ");
+
+scanf("%d",&choice);
+switch(choice)
+{
+	case 1:main();
+		break;
+	case 2:exiter();
+		break;
+
+	default:error();
+		break;
+
+}
+
+}
+
+
+
+void pusher(char item)
+{
+	if(toper >= SIZE-1)
+	{
+		printf("\nStack Overflow.");
+	}
+	else
+	{
+		toper = toper+1;
+		stacker[toper] = item;
+	}
+}
+
+/* define pop operation */
+char poper()
+{
+	char item ;
+
+	if(toper <0)
+	{
+		printf("stack under flow: invalid infix expression");
+		getch();
+		/* underflow may occur for invalid expression */
+		/* where ( and ) are not matched */
+		exit(1);
+	}
+	else
+	{
+		item = stacker[toper];
+		toper = toper-1;
+		return(item);
+	}
+}
+
+
+
+
+int is_operator(char symbol)
+{
+	if(symbol == '*' || symbol == '/' || symbol == '+' || symbol =='-')
+	{
+		return 1;
+	}
+	else
+	{
+	return 0;
+	}
+}
+
+
+int precedencer(char symbol)
+{
+	if(symbol == '^')	   /* exponent operator, highest precedence*/
+	{
+		return(3);
+	}
+	else if(symbol == '*' || symbol == '/')
+	{
+		return(2);
+	}
+	else if(symbol == '+' || symbol == '-')     /* lowest precedence */
+	{
+		return(1);
+	}
+	else
+	{
+		return(0);
+	}
+}
+
+void InfixToPostfixer()
+{
+
+	int i, j,len;
+	char item;
+	char a[100];
+	char x;
+	struct node *new_node;
+
+	head();
+	printf("\n \t \t \t Enter Infix Expression\n \t \t \t ");
+	gets(infix_exp);																														gets(infix_exp);
+
+
+	pusher('(');                      /* push '(' onto stack */
+	strcat(infix_exp,")");            /* add ')' to infix expression */
+
+	i=0;
+	j=0;
+	item=infix_exp[i];         /* initialize before loop*/
+
+	while(item != '\0')        /* run loop till end of infix expression */
+	{
+		if(item == '(')
+		{
+			pusher(item);
+		}
+		else if( isdigit(item) || isalpha(item))
+		{
+			postfix_exp[j] = item;         /* add operand symbol to postfix expr */
+			j++;
+		}
+		else if(is_operator(item) == 1)        /* means symbol is operator */
+		{
+			x=poper();
+			while(is_operator(x) == 1 && precedencer(x)>= precedencer(item))
+			{
+				postfix_exp[j] = x;       /* so pop all higher precendence operator and */
+				j++;
+				x = poper();              /* add them to postfix expresion */
+			}
+			pusher(x);
+
+
+			pusher(item);        /* push current oprerator symbol onto stack */
+		}
+		else if(item == ')')         /* if current symbol is ')' then */
+		{
+			x = poper();                   /* pop and keep popping until */
+			while(x != '(')                /* '(' encounterd */
+			{
+				postfix_exp[j] = x;
+				j++;
+				x = poper();
+			}
+		}
+		else
+		{
+			printf("\nInvalid infix Expression.\n");     /* the it is illegeal  symbol */
+			getch();
+			exit(1);
+		}
+		i++;
+
+
+
+		item = infix_exp[i]; /* go to next symbol of infix expression */
+	} /* while loop ends here */
+	if(toper>0)
+	{
+		printf("\nInvalid infix Expression.\n");    /* the it is illegeal  symbol */
+		getch();
+		exit(1);
+	}
+
+
+
+	postfix_exp[j] = '\0'; /* add sentinel else puts() fucntion */
+	/* will print entire postfix[] array upto SIZE */
+
+
+
+	len=strlen(postfix_exp);
+	for(i=len-1; i>=0 ; i--)
+	{
+
+	//Saving the current element (value) to new_node
+	new_node=(struct node *)malloc(sizeof(struct node));
+	new_node->data=postfix_exp[i];
+	new_node->left=new_node->right=new_node->prev=NULL;
+
+
+
+	if(root==NULL)			//root=NULL which is initial condition
+		{
+		root=new_node;		//Giving root value as new_root where it is the last element
+		cur=par=root;           //Giving root value to cur & par
+		}
+	else
+		{
+		if(postfix_exp[i]=='+' ||postfix_exp[i]=='-' ||postfix_exp[i]=='*'||postfix_exp[i]=='/')
+			{
+			if(par->right==NULL)      //second last operator element goes to right of root
+				{
+				cur=new_node;
+				par->right=cur;
+				cur->prev=par;
+				par=cur;
+				}
+			else if(par->left==NULL)     //third last opeartor element goes to left of root
+				{
+				cur=new_node;
+				par->left=cur;
+				cur->prev=par;
+				par=cur;
+				}
+			else
+				{
+				 while(par->left!=NULL)
+					{
+					par=par->prev;
+					}
+				 cur=new_node;
+				 par->left=cur;
+				 cur->prev=par;
+				 par=cur;
+				 }
+			}
+
+		else
+			{
+			if(par->right==NULL)
+				{
+				cur=new_node;
+				par->right=cur;
+				cur->prev=par;
+				}
+			else if(par->left==NULL)
+				{
+				cur=new_node;
+				par->left=cur;
+				cur->prev=par;
+				}
+
+			else
+				{
+				while(par->left!=NULL)
+					{
+					par=par->prev;
+					}
+				cur=new_node;
+				par->left=cur;
+				cur->prev=par;
+				}
+			}
+		}
+ }
+
+ printf("\n\nInorder Traversal: \n\n");
+ inorder(root);
+ printf("\n\nPreorder Traversal: \n\n");
+ preorder(root);
+ printf("\n\nPostorder Traversal: \n\n");
+ postorder(root);
+ getch();
+ clrscr();
+
+	}
+
+
+
+void main()
+{
+     // float val;
+      clrscr();
+	textcolor(WHITE);
+	head();
+	cprintf("\n \n \n \n \n \n \n \n \t \t WELCOME TO THE PROGRAM \t \t");
+	delay(400);
+	cprintf("\n Made by VAMS_GROUP");
+	getch();
+	clrscr();
+
+	head();
+
+	printf("\n \n \n \n 			Select any one option: \n\n");
+	delay(90);
+	printf("			1. Conversion \n\n 			2. Evaluation \n\n 			3. Information \n\n 			4. Credits \n\n 			5. Exit \n\n			");
+	//Postfix expression conversion
+	scanf("%d",&choice);
+
+
+	switch(choice)
+	{
+	case 1:conversion();
+		selecter();
+		break;
+
+	case 2:evaluatePostfixExp();
+		selecter();
+		break;
+
+	case 3:	info();
+		selecter();
+		break;
+
+	case 4:credits();
+		selecter();
+		break;
+	case 5: delay(100);
+		exiter();
+		break;
+
+	default:error();
+		break;
+	}
+	getch();
+}
+
+//-------INORDER-------
+ void inorder(struct node *root)
+{
+ if(root!=NULL)
+ {
+  inorder(root->left);
+  printf("%c\t",root->data);
+  inorder(root->right);
+ }
+}
+
+//-------PREORDER-------
+void preorder(struct node *root)
+{
+ if(root!=NULL)
+ {
+  printf("%c\t",root->data);
+  preorder(root->left);
+  preorder(root->right);
+ }
+}
+
+//-------POSTORDER-------
+void postorder(struct node *root)
+{
+ if(root!=NULL)
+ {
+  postorder(root->left);
+  postorder(root->right);
+  printf("%c\t",root->data);
+ }
+}
+
+//-----Evalution of postfix
+void evaluatePostfixExp()
+{
+    int i = 0;
+    char exp[100];
+    stack *s;
+    float op1, op2, value;
+    s->top=-1;
+
+    head();
+
+    printf("\t \t \t Enter a postfix expression \n \n \t \t \t ");
+    gets(exp);                          																							gets(exp);
+
+    while(exp[i] != '\0')
+    {
+     if(isdigit(exp[i]))
+     push(s,(float)(exp[i]-'0'));
+    else
+    {
+      op2 = pop(s);
+      op1 = pop(s);
+      switch(exp[i])
+      {
+	   case'+' :
+		     value = op1 + op2 ;
+		     break;
+	   case'-':
+		    value = op1 - op2 ;
+		    break;
+	   case'*':
+		    value = op1 * op2 ;
+		    break;
+	   case'/':
+		    value = op1 / op2 ;
+		    break;
+	   case'%':
+		    value = (int)op1 % (int)op2 ;
+		    break;
+	   }
+	   push(s,value);
+      }
+      i++;
+    }
+    printf("\n \t \t \t The answer is  %f",(pop(s)));
+	getch();
+	clrscr();
+}
+
+void push(stack *s,float val)
+{
+     if(s->top==MAX-1)
+	printf("\n STACK OVERFLOW");
+     else
+     {
+	 s->top++;
+	 s->data[s->top]=val;
+     }
+}
+
+float pop(stack *s)
+{
+     float val=-1;
+     if(s->top==-1)
+	printf("\n STACK UNDERFLOW");
+     else
+     {
+	val = s->data[s->top--];
+     }
+     return val;
+}
+
+//design
+
+void head()
+{
+	clrscr();
+	printf("________________________________________________________________________________");
+	printf("  		     PROJECT : EXPRESSION TREE : VAMS GROUP \n");
+	printf("--------------------------------------------------------------------------------");
+
+}
+
+void info()
+{
+	head();
+
+	printf("\n \n \n \n 			Select any one options \n\n");
+	printf("			1. Expression Tree \n\n 			2. Traversal \n\n 			3. Algorithm \n\n 			4. Main Menu \n\n			5. Exit \n\n			");\
+	delay(400);
+	scanf("%d",&choice);
+	switch(choice)
+	{
+	case 1:
+		head();
+		printf("\n \n		EXPRESSION TREE			");
+		delay(120);
+		printf("\n\n		An expression tree is a representation of expressions \n		arranged in a tree-like data structure.\n \n		In other words, it is a tree with leaves as operands \n		of the expression and nodes contain the operators.");
+		getch();
+		break;
+
+	case 2:
+		head();
+		printf("\n ");
+		printf("\n \n		TRAVERSAL			");
+		delay(120);
+		printf("\n\n		Traversal is the method of visiting each node \n		in a tree exactly once.");
+		getch();
+		break;
+
+	case 3:
+	{
+	head();
+	printf("\n \n \n \n 			Select any one options \n\n");
+	printf("			1. Inorder \n\n 			2. Preorder \n\n 			3. Postorder \n\n 			4. Go Back \n\n			5. Go Main Menu \n\n			6. Exit \n\n			");
+	delay(400);
+	scanf("%d",&choice);
+	switch(choice)
+	{
+	case 1:	head();
+		printf("\n \n \n \n			 Alogrithm : Infix Traversal\n\n");
+		printf("			1. Traverse the left sub-tree\n\n");
+		printf("			2. Visit and print the root node\n\n");
+		printf("			3. Traverse the right subtree\n");
+		getch();
+		break;
+
+	case 2: head();
+		printf("\n \n \n \n			 Alogrithm : Preoder Traversal\n\n");
+		printf("			1. Visit and print the root node\n\n");
+		printf("			2. Traverse the left sub-tree\n\n");
+		printf("			3. Traverse the right subtree\n\n");
+		getch();
+		break;
+
+	case 3:	head();
+		printf("\n \n \n \n			 Alogrithm : Postorder Traversal\n\n");
+		printf("			1. Traverse the left sub-tree\n\n");
+		printf("			2. Traverse the right subtree\n\n");
+		printf("			3. Visit and print the root node\n\n");
+		getch();
+		break;
+
+	case 4:info();
+		break;
+
+	case 5: main();
+		break;
+
+	case 6:exiter();
+		break;
+
+	default:error();
+		break;
+	}
+
+
+	break;
+	      }
+	case 4:main();
+		break;
+
+	case 5:exiter();
+		break;
+
+
+	default:error();
+		break;
+	}
+	clrscr();
+}
+
+
+void credits()
+{
+int i;
+clrscr();
+for(i=15;i>=1;i--)
+{
+gotoxy(20,i);
+printf("\n \t \t \t \t  CREDITS \n");
+printf("\n \t \t	      OUR GROUP MEMBER \n");
+printf("\n \t \t \t	Sujith Kurup \n\n  \t \t \t	Ahinav Menon \n \n \t \t \t	Srivenkatesh Nair \n\n  \t \t \t	Manish Pillai");
+delay(550);
+clrscr();
+}
+for(i=15;i>=1;i--)
+{
+gotoxy(20,i);
+printf("\n \t \t \t \t SPECIAL THANKS \n");
+printf("\n \t \t TO OUR PARENTS \t to bring us in this position\n");
+printf("\n \t \t TO PILLAI COLLEGE \t to give us this opportunity\n");
+printf("\n \t \t Prof. SMITA JOSHI \t to help us at each moment\n");
+printf("\n \t \t TO EVERYONE \t 	 who motivated us");
+delay(550);
+clrscr();
+}
+}
+
+void postconvert()
+	{
+
+	char a[100];
+	int len,i;
+	struct node *new_node;
+
+
+	head();
+	printf("\n			Enter Postfix Expression\n\n			");
+	gets(a);																												gets(a);
+	len=strlen(a);
+	for(i=len-1; i>=0 ; i--)
+	{
+
+	//Saving the current element (value) to new_node
+	new_node=(struct node *)malloc(sizeof(struct node));
+	new_node->data=a[i];
+	new_node->left=new_node->right=new_node->prev=NULL;
+
+
+
+	if(root==NULL)			//root=NULL which is initial condition
+		{
+		root=new_node;		//Giving root value as new_root where it is the last element
+		cur=par=root;           //Giving root value to cur & par
+		}
+	else
+		{
+		if(a[i]=='+' ||a[i]=='-' ||a[i]=='*'||a[i]=='/')
+			{
+			if(par->right==NULL)                   //second last operator element goes to right of root
+				{
+				cur=new_node;
+				par->right=cur;
+				cur->prev=par;
+				par=cur;
+				}
+			else if(par->left==NULL)      //third last opeartor element goes to left of root
+				{
+				cur=new_node;
+				par->left=cur;
+				cur->prev=par;
+				par=cur;
+				}
+			else
+				{
+				 while(par->left!=NULL)
+					{
+					par=par->prev;
+					}
+				 cur=new_node;
+				 par->left=cur;
+				 cur->prev=par;
+				 par=cur;
+				 }
+			}
+
+		else
+			{
+			if(par->right==NULL)
+				{
+				cur=new_node;
+				par->right=cur;
+				cur->prev=par;
+				}
+			else if(par->left==NULL)
+				{
+				cur=new_node;
+				par->left=cur;
+				cur->prev=par;
+				}
+
+			else
+				{
+				while(par->left!=NULL)
+					{
+					par=par->prev;
+					}
+				cur=new_node;
+				par->left=cur;
+				cur->prev=par;
+				}
+			}
+		}
+ }
+
+ printf("\n\nInorder Traversal: \n\n");
+ inorder(root);
+ printf("\n\nPreorder Traversal: \n\n");
+ preorder(root);
+ printf("\n\nPostorder Traversal: \n\n");
+ postorder(root);
+ getch();
+
+	}
+
+void preconvert()
+{
+	char a[100];
+	int len,i;
+	struct node *new_node;
+
+	head();
+	printf("\n			Enter Prefix Expression\n\n			");
+	gets(a);
+	gets(a);
+	len=strlen(a);
+	for(i=0; i<=len-1 ; i++)
+	{
+
+	//Saving the current element (value) to new_node
+
+	new_node=(struct node *)malloc(sizeof(struct node));
+	new_node->data=a[i];
+	new_node->left=new_node->right=new_node->prev=NULL;
+
+
+
+	if(root==NULL)			//root=NULL which is initial condition
+		{
+		root=new_node;		//Giving root value as new_root where it is the last element
+		cur=par=root;           //Giving root value to cur & par
+		}
+	else
+		{
+		if(a[i]=='+' ||a[i]=='-' ||a[i]=='*'||a[i]=='/')
+			{
+			if(par->left==NULL)        //second last operator element goes to right of root
+				{
+				cur=new_node;
+				par->left=cur;
+				cur->prev=par;
+				par=cur;
+				}
+			else if(par->right==NULL)     //third last opeartor element goes to left of root
+				{
+				cur=new_node;
+				par->right=cur;
+				cur->prev=par;
+				par=cur;
+				}
+			else
+				{
+				 while(par->right!=NULL)
+					{
+					par=par->prev;
+					}
+				 cur=new_node;
+				 par->right=cur;
+				 cur->prev=par;
+				 par=cur;
+				 }
+			}
+
+		else
+			{
+			if(par->left==NULL)
+				{
+				cur=new_node;
+				par->left=cur;
+				cur->prev=par;
+				}
+			else if(par->right==NULL)
+				{
+				cur=new_node;
+				par->right=cur;
+				cur->prev=par;
+				}
+
+			else
+				{
+				while(par->right!=NULL)
+					{
+					par=par->prev;
+					}
+				cur=new_node;
+				par->right=cur;
+				cur->prev=par;
+				}
+			}
+		}
+ }
+
+
+ printf("\n\nInorder Traversal: \n\n");
+ inorder(root);
+ printf("\n\nPreorder Traversal: \n\n");
+ preorder(root);
+ printf("\n\nPostorder Traversal: \n\n");
+ postorder(root);
+ getch();
+
+}
+
+void conversion()
+{
+
+	char converter[100];
+	head();
+
+	printf("\n \n \n \n 			Select any one options \n\n");
+	delay(90);
+	printf("			1. Preoder \n\n 			2. Postorder \n\n 			3. Infix \n\n 			4. Go Main Menu \n\n 			5. Exit \n\n			");
+
+	scanf("%d",&choice);
+
+	switch(choice)
+	{
+	case 1:preconvert();
+		break;
+
+	case 2:postconvert();
+		break;
+
+	case 3:InfixToPostfixer();
+
+		break;
+	case 4:main();
+		break;
+
+	case 5: delay(100);
+		exiter();
+		break;
+
+	default:error();
+		break;
+	}
+
+
+
+}
+
